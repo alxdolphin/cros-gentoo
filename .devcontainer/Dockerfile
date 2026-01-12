@@ -43,11 +43,9 @@ RUN apt-get update && apt-get install -y \
 # Create vscode user (Codespaces will use this)
 RUN useradd -m -s /bin/bash vscode && \
     usermod -aG sudo vscode && \
-    echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-    chsh -s /bin/zsh vscode && chsh -s /bin/zsh root
-RUN chsh -s /bin/zsh vscode && chsh -s /bin/zsh root
-
-RUN chsh -s /bin/zsh vscode && chsh -s /bin/zsh root
+    echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    chsh -s /bin/zsh vscode && \
+    chsh -s /bin/zsh root
 
 # Set up environment variables
 ENV ARCH=arm
