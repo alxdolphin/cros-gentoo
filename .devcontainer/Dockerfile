@@ -47,6 +47,8 @@ RUN useradd -m -s /bin/bash vscode && \
     chsh -s /bin/zsh vscode && chsh -s /bin/zsh root
 RUN chsh -s /bin/zsh vscode && chsh -s /bin/zsh root
 
+RUN chsh -s /bin/zsh vscode && chsh -s /bin/zsh root
+
 # Set up environment variables
 ENV ARCH=arm
 ENV CROSS_COMPILE=arm-linux-gnueabihf-
