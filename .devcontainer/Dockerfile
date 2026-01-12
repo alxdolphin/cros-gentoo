@@ -22,6 +22,15 @@ RUN apt-get update && apt-get install -y \
     vim \
     nano \
     make \
+    sudo \
+    zsh \
+    zsh-autosuggestions \
+    zsh-syntax-highlighting \
+    zsh-completions \
+    zsh-history-substring-search \
+    zsh-history-substring-search-highlighting \
+    zsh-history-substring-search-autosuggestions \
+    zsh-history-substring-search-syntax-highlighting \
     kmod \
     cpio \
     xz-utils \
@@ -35,6 +44,8 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -m -s /bin/bash vscode && \
     usermod -aG sudo vscode && \
     echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    chsh -s /bin/zsh vscode && chsh -s /bin/zsh root
+RUN chsh -s /bin/zsh vscode && chsh -s /bin/zsh root
 
 # Set up environment variables
 ENV ARCH=arm
