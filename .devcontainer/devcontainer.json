@@ -1,0 +1,33 @@
+{
+	"name": "C201 Kernel Development",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": ".."
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.vscode-json",
+				"redhat.vscode-yaml",
+				"ms-vscode.makefile-tools",
+				"llvm-vs-code-extensions.vscode-clangd"
+			],
+			"settings": {
+				"files.exclude": {
+					"**/linux/**": false
+				}
+			}
+		}
+	},
+	"remoteUser": "vscode",
+	"remoteEnv": {
+		"ARCH": "arm",
+		"CROSS_COMPILE": "arm-linux-gnueabihf-",
+		"PATH": "/usr/local/bin:${containerEnv:PATH}"
+	},
+	"postCreateCommand": "bash .devcontainer/setup.sh"
+}

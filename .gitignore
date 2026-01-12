@@ -1,0 +1,86 @@
+# Large binary image files
+*.img
+*.img.gz
+*.img.xz
+
+# Linux kernel source tree (git submodule)
+# Note: linux/ is a submodule, but we ignore it to avoid committing the large tree
+# Use: git submodule update --init linux
+linux/
+linux-*.tar.xz
+linux-*.tar.gz
+
+# Build artifacts
+build/
+*.o
+*.ko
+*.a
+*.so
+*.mod
+*.mod.c
+Module.symvers
+modules.order
+.tmp_versions/
+
+# Kernel build output
+vmlinux
+vmlinux.o
+System.map
+*.dtb
+*.dtbo
+zImage
+Image
+uImage
+
+# Kernel config backups
+.config.old
+.config.bak
+*.config.old
+
+# Compiled binaries
+*.bin
+*.elf
+
+# Package directories
+kernel-package/
+*.tar.gz
+*.tar.bz2
+*.zip
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+*.tmp
+*.log
+*.cache
+.cache/
+.config.running
+
+# Chroot mount points
+/mnt/c201-chroot
+
+# Loop devices (references)
+*.loop
+
+# NFS/NBD server state
+exports
+nbd-server.pid
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Backup files
+*.bak
+*.backup
+*~
+.cursor/

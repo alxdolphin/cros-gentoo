@@ -1,0 +1,53 @@
+================================================================================
+NBD SERVER SETUP - Quick Instructions for Server Computer
+================================================================================
+
+STEP 1: Install NBD Server
+---------------------------
+On Gentoo:        emerge net-misc/nbd
+On Debian/Ubuntu: apt-get install nbd-server
+On Fedora:        dnf install nbd
+
+
+STEP 2: Start the Server
+-------------------------
+Option A - Using config file:
+  nbd-server -C docs/nbd.conf
+
+Option B - Using recovery image file:
+  nbd-server 10809 /path/to/c201-preconfigured.img
+
+Option C - If USB device is attached:
+  nbd-server 10809 /dev/sdb
+  (Replace /dev/sdb with your actual USB device - use 'lsblk' to find it)
+
+
+STEP 3: Verify Server is Running
+---------------------------------
+  ps aux | grep nbd-server
+  netstat -tlnp | grep 10809
+
+
+STEP 4: Get Your Server IP Address
+-----------------------------------
+  hostname -I
+
+
+STEP 5: Configure Firewall (if needed)
+---------------------------------------
+  iptables -A INPUT -p tcp --dport 10809 -j ACCEPT
+  (or use firewalld/ufw as appropriate)
+
+
+STEP 6: Share IP Address with Client
+-------------------------------------
+  Tell the client your server IP address
+
+
+To Stop Server:
+---------------
+  killall nbd-server
+
+
+For detailed instructions, see SERVER-SETUP.md
+================================================================================
