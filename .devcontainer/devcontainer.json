@@ -23,7 +23,7 @@
 			}
 		}
 	},
-	"remoteUser": "vscode",
+	"remoteUser": "root",
 	"remoteEnv": {
 		"ARCH": "arm",
 		"CROSS_COMPILE": "arm-linux-gnueabihf-",
