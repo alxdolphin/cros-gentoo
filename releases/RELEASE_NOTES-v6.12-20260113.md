@@ -2,7 +2,7 @@
 
 ## C201 Kernel for Gentoo Linux
 
-**Release Date**: Tue, 13 Jan 2026 07:12:50 +0000  
+**Release Date**: Tue, 13 Jan 2026 09:20:41 +0000  
 **Kernel Version**: 6.12  
 **Target Device**: ASUS Chromebook C201 (rk3288 veyron-speedy)
 
@@ -15,7 +15,7 @@ This release contains a pre-built Linux kernel for the ASUS Chromebook C201 runn
 - `zImage` - Kernel image (6.12)
 - `rk3288-veyron-speedy.dtb` - Device tree blob
 - `kernel.config` - Kernel configuration
-- `c201-kernel-v6.12-20260113.img` - Bootable kernel image (64MB)
+- `c201-system-v6.12-20260113.img` - Full system image (4GB) with kernel and rootfs
 
 ## Features
 
@@ -43,7 +43,7 @@ Should display: `6.12`
 
 - **Cross Compiler**: arm-linux-gnueabihf-gcc
 - **Build Host**: codespaces-3081e1
-- **Build Date**: Tue, 13 Jan 2026 07:12:50 +0000
+- **Build Date**: Tue, 13 Jan 2026 09:20:41 +0000
 
 ## Source Code
 

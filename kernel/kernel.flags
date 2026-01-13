@@ -1,1 +1,1 @@
-console=tty1 root=/dev/mmcblk1p2 rootfstype=ext4 rootwait rw
+console=tty1 root=PARTUUID=ae51ec9b-87d2-4e84-af47-79b15348d8bf rootfstype=ext4 rootwait rw

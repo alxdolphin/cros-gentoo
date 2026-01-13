@@ -45,6 +45,10 @@
 		"CROSS_COMPILE": "arm-linux-gnueabihf-",
 		"PATH": "/usr/local/bin:${containerEnv:PATH}"
 	},
+	"runArgs": ["--privileged"],
+	"mounts": [
+		"source=/dev,target=/dev,type=bind"
+	],
 	"postCreateCommand": "bash .devcontainer/setup.sh",
 	"workspaceFolder": "/workspace"
 }
