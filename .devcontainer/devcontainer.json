@@ -6,6 +6,7 @@
 	},
 	"features": {
 		"ghcr.io/devcontainers/features/common-utils:2": {
+			"username": "vscode",
 			"installZsh": false,
 			"upgradePackages": false
 		},

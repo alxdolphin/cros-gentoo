@@ -64,5 +64,5 @@ RUN mkdir -p /workspace && \
 # Set working directory
 WORKDIR /workspace
 
-# Switch to vscode user (has sudo access via NOPASSWD)
-USER vscode
+# Note: Do not switch to vscode user here - devcontainer features need to run as root
+# The devcontainer.json remoteUser setting will handle switching to vscode after features install
