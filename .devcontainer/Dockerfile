@@ -6,54 +6,63 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install build dependencies and cross-compilation toolchain
 RUN apt-get update && apt-get install -y \
+    # Build essentials
     build-essential \
+    make \
+    bc \
+    bison \
+    flex \
+    # ARM cross-compilation toolchain
     gcc-arm-linux-gnueabihf \
     g++-arm-linux-gnueabihf \
     binutils-arm-linux-gnueabihf \
     libc6-dev-armhf-cross \
-    bc \
-    bison \
-    flex \
+    # Kernel build dependencies
     libssl-dev \
     libelf-dev \
+    libncurses-dev \
+    # Device tree and bootloader tools
+    device-tree-compiler \
+    u-boot-tools \
+    # Kernel utilities
+    kmod \
+    cpio \
+    xz-utils \
+    # Development tools
+    git \
     wget \
     curl \
-    git \
     vim \
     nano \
-    make \
+    # Python for kernel scripts
+    python3 \
+    python3-pip \
+    # System utilities
     sudo \
+    # Shell (zsh optional, bash is default)
     zsh \
     zsh-autosuggestions \
     zsh-syntax-highlighting \
     zsh-completions \
-    zsh-history-substring-search \
-    zsh-history-substring-search-highlighting \
-    zsh-history-substring-search-autosuggestions \
-    zsh-history-substring-search-syntax-highlighting \
-    kmod \
-    cpio \
-    xz-utils \
-    python3 \
-    python3-pip \
-    device-tree-compiler \
-    u-boot-tools \
     && rm -rf /var/lib/apt/lists/*
 
-# Create vscode user (Codespaces will use this)
+# Create vscode user with sudo access (Codespaces default)
 RUN useradd -m -s /bin/bash vscode && \
     usermod -aG sudo vscode && \
-    echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
-    chsh -s /bin/zsh vscode && \
-    chsh -s /bin/zsh root
+    echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Set up environment variables
+# Set up environment variables for kernel building
 ENV ARCH=arm
 ENV CROSS_COMPILE=arm-linux-gnueabihf-
 ENV PATH="/usr/local/bin:${PATH}"
 
+# Create workspace directory and set ownership to vscode user
+# This ensures vscode has write permissions when the container starts
+RUN mkdir -p /workspace && \
+    chown -R vscode:vscode /workspace
+
 # Set working directory
 WORKDIR /workspace
 
-# Switch to vscode user
+# Switch to vscode user (has sudo access via NOPASSWD)
 USER vscode

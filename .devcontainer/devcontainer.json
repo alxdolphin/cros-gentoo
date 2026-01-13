@@ -19,15 +19,27 @@
 			"settings": {
 				"files.exclude": {
 					"**/linux/**": false
-				}
+				},
+				"files.watcherExclude": {
+					"**/linux/**": true
+				},
+				"C_Cpp.default.includePath": [
+					"${workspaceFolder}/linux/include",
+					"${workspaceFolder}/linux/arch/arm/include"
+				],
+				"C_Cpp.default.defines": [
+					"__KERNEL__",
+					"__ARM_ARCH=7"
+				]
 			}
 		}
 	},
-	"remoteUser": "root",
+	"remoteUser": "vscode",
 	"remoteEnv": {
 		"ARCH": "arm",
 		"CROSS_COMPILE": "arm-linux-gnueabihf-",
 		"PATH": "/usr/local/bin:${containerEnv:PATH}"
 	},
-	"postCreateCommand": "bash .devcontainer/setup.sh"
+	"postCreateCommand": "bash .devcontainer/setup.sh",
+	"workspaceFolder": "/workspace"
 }
