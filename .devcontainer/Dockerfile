@@ -43,7 +43,6 @@ RUN apt-get update && apt-get install -y \
     zsh \
     zsh-autosuggestions \
     zsh-syntax-highlighting \
-    zsh-completions \
     && rm -rf /var/lib/apt/lists/*
 
 # Create vscode user with sudo access (Codespaces default)
