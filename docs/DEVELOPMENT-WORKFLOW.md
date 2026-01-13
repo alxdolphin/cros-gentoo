@@ -92,7 +92,7 @@ This script:
 ```bash
 cd linux
 export ARCH=arm
-export CROSS_COMPILE=arm-linux-gnueabihf-
+export CROSS_COMPILE=armv7a-unknown-linux-gnueabihf-
 make olddefconfig
 make -j$(nproc) zImage dtbs modules
 ```
@@ -106,10 +106,15 @@ scripts/package-kernel.sh
 ```
 
 Creates `kernel-package/` with:
-- `zImage` - Kernel image
-- `rk3288-veyron-speedy.dtb` - Device tree
+- `zImage` - Raw kernel image
+- `rk3288-veyron-speedy.dtb` - Device tree blob
+- `gentoo.itb` - FIT image (kernel + DTB) for ChromeOS verified boot
+- `vmlinux.kpart` - Signed kernel partition image (if signing succeeded)
+- `kernel.flags` - Kernel boot parameters
 - `kernel.config` - Configuration used
 - `PACKAGE_INFO.txt` - Build information
+
+**Note**: The package script attempts to sign the FIT image using ChromeOS devkeys. If signing keys are not available (`/usr/share/vboot/devkeys/`), the unsigned FIT image is still created and can be used for development.
 
 ### Deploy to C201
 
@@ -163,7 +168,7 @@ cp .config.running kernel-config
 
 ### Build Fails
 
-1. Check cross-compiler: `arm-linux-gnueabihf-gcc --version`
+1. Check cross-compiler: `armv7a-unknown-linux-gnueabihf-gcc --version`
 2. Verify config: `ls -la .config.running`
 3. Clean build: `cd linux && make clean`
 4. Rebuild: `scripts/build-kernel.sh`

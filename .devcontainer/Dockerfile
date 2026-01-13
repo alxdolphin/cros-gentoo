@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     # Device tree and bootloader tools
     device-tree-compiler \
     u-boot-tools \
+    vboot-utils \
     # Kernel utilities
     kmod \
     cpio \
@@ -52,7 +53,7 @@ RUN useradd -m -s /bin/bash vscode && \
 
 # Set up environment variables for kernel building
 ENV ARCH=arm
-ENV CROSS_COMPILE=arm-linux-gnueabihf-
+ENV CROSS_COMPILE=armv7a-unknown-linux-gnueabihf-
 ENV PATH="/usr/local/bin:${PATH}"
 
 # Create workspace directory and set ownership to vscode user

@@ -42,7 +42,7 @@
 	"remoteUser": "vscode",
 	"remoteEnv": {
 		"ARCH": "arm",
-		"CROSS_COMPILE": "arm-linux-gnueabihf-",
+		"CROSS_COMPILE": "armv7a-unknown-linux-gnueabihf-",
 		"PATH": "/usr/local/bin:${containerEnv:PATH}"
 	},
 	"runArgs": ["--privileged"],

@@ -18,13 +18,16 @@ Install dependencies:
 ```bash
 sudo apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf \
     binutils-arm-linux-gnueabihf bc bison flex libssl-dev libelf-dev \
-    device-tree-compiler
+    device-tree-compiler u-boot-tools vboot-utils
+# Note: For Gentoo toolchain, use armv7a-unknown-linux-gnueabihf-gcc instead
+# u-boot-tools provides mkimage for FIT image creation
+# vboot-utils provides futility for ChromeOS kernel signing
 ```
 
 Set environment:
 ```bash
 export ARCH=arm
-export CROSS_COMPILE=arm-linux-gnueabihf-
+export CROSS_COMPILE=armv7a-unknown-linux-gnueabihf-
 ```
 
 ## Project Structure
@@ -60,6 +63,7 @@ scripts/build-kernel.sh
 Output in `kernel/`:
 - `zImage` - Kernel image
 - `rk3288-veyron-speedy.dtb` - Device tree
+- `gentoo.itb` - FIT image (kernel + DTB) for ChromeOS verified boot
 - `config-latest` - Kernel configuration
 
 Package for deployment:
@@ -67,10 +71,17 @@ Package for deployment:
 scripts/package-kernel.sh
 ```
 
+Creates `kernel-package/` with:
+- `zImage` - Raw kernel image
+- `rk3288-veyron-speedy.dtb` - Device tree blob
+- `gentoo.itb` - FIT image
+- `vmlinux.kpart` - Signed kernel partition image (if signing succeeded)
+- `kernel.flags` - Kernel boot parameters
+
 ## Environment Variables
 
 - `ARCH=arm` - Target architecture
-- `CROSS_COMPILE=arm-linux-gnueabihf-` - Cross-compiler prefix
+- `CROSS_COMPILE=armv7a-unknown-linux-gnueabihf-` - Cross-compiler prefix
 - `KERNEL_VERSION=v6.12` - Kernel version tag (default, used for git submodule)
 
 ## Documentation

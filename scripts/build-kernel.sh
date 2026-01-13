@@ -11,7 +11,7 @@ OUTPUT_DIR="${PROJECT_ROOT}/kernel"
 
 # Cross-compilation settings
 export ARCH=arm
-export CROSS_COMPILE="${CROSS_COMPILE:-arm-linux-gnueabihf-}"
+export CROSS_COMPILE="${CROSS_COMPILE:-armv7a-unknown-linux-gnueabihf-}"
 
 # Check if we're in Codespace or have cross-compiler
 if ! command -v ${CROSS_COMPILE}gcc &> /dev/null; then
@@ -85,7 +85,30 @@ if [ -f "arch/arm/boot/dts/rk3288-veyron-speedy.dtb" ]; then
     echo "✓ Copied device tree to $OUTPUT_DIR/"
 fi
 
+# Create FIT image (gentoo.itb) - required for ChromeOS verified boot
+echo ""
+echo "=== Creating FIT image ==="
+FIT_SOURCE="${PROJECT_ROOT}/kernel/gentoo.its"
+if [ -f "$FIT_SOURCE" ]; then
+    cd "$OUTPUT_DIR"
+    if command -v mkimage &> /dev/null; then
+        # Copy .its file to output directory and adjust paths
+        cp "$FIT_SOURCE" gentoo.its.tmp
+        # mkimage will look for zImage and DTB in the same directory as the .its file
+        mkimage -f gentoo.its.tmp gentoo.itb
+        rm -f gentoo.its.tmp
+        echo "✓ Created FIT image: gentoo.itb"
+    else
+        echo "Warning: mkimage not found. Install u-boot-tools to create FIT image."
+        echo "FIT image creation skipped."
+    fi
+else
+    echo "Warning: FIT source file not found: $FIT_SOURCE"
+    echo "FIT image creation skipped."
+fi
+
 # Save config
+cd "$KERNEL_DIR"
 cp .config "$OUTPUT_DIR/config-$(date +%Y%m%d-%H%M%S)"
 cp .config "$OUTPUT_DIR/config-latest"
 echo "✓ Saved kernel config"

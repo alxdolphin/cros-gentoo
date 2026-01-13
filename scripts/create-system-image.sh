@@ -133,23 +133,51 @@ if [ "$USE_LOOP" = "false" ] || [ -z "$LOOP_DEV" ]; then
     echo "Loop device not available, using direct file method..."
     USE_LOOP=false
     
-    # Create kernel partition image directly using genext2fs
+    # Create kernel partition - use signed kernel if available, otherwise use FIT image or raw files
     KERNEL_PART_IMG=$(mktemp)
     KERNEL_TMPDIR=$(mktemp -d)
-    cp "${KERNEL_PACKAGE}/zImage" "$KERNEL_TMPDIR/"
-    cp "${KERNEL_PACKAGE}/rk3288-veyron-speedy.dtb" "$KERNEL_TMPDIR/" 2>/dev/null || true
     
-    if command -v genext2fs &> /dev/null; then
-        genext2fs -b 65536 -d "$KERNEL_TMPDIR" -L "kernel" "$KERNEL_PART_IMG" 2>/dev/null
-        # Write kernel partition to offset (2048 sectors * 512 = 1048576 bytes)
-        dd if="$KERNEL_PART_IMG" of="$IMAGE_FILE" bs=512 seek=2048 conv=notrunc 2>/dev/null
-        rm -f "$KERNEL_PART_IMG"
+    # Prefer signed kernel partition image (vmlinux.kpart)
+    if [ -f "${KERNEL_PACKAGE}/vmlinux.kpart" ]; then
+        echo "Using signed kernel partition image..."
+        # Write signed kernel directly to partition offset (2048 sectors * 512 = 1048576 bytes)
+        dd if="${KERNEL_PACKAGE}/vmlinux.kpart" of="$IMAGE_FILE" bs=512 seek=2048 conv=notrunc 2>/dev/null
         rm -rf "$KERNEL_TMPDIR"
-        echo "✓ Kernel partition created (direct method)"
+        echo "✓ Signed kernel partition written (direct method)"
+    # Fallback: Use FIT image if available
+    elif [ -f "${KERNEL_PACKAGE}/gentoo.itb" ] && [ -f "${KERNEL_PACKAGE}/kernel.flags" ]; then
+        echo "Using FIT image for kernel partition..."
+        cp "${KERNEL_PACKAGE}/gentoo.itb" "$KERNEL_TMPDIR/"
+        cp "${KERNEL_PACKAGE}/kernel.flags" "$KERNEL_TMPDIR/" 2>/dev/null || true
+        
+        if command -v genext2fs &> /dev/null; then
+            genext2fs -b 65536 -d "$KERNEL_TMPDIR" -L "kernel" "$KERNEL_PART_IMG" 2>/dev/null
+            dd if="$KERNEL_PART_IMG" of="$IMAGE_FILE" bs=512 seek=2048 conv=notrunc 2>/dev/null
+            rm -f "$KERNEL_PART_IMG"
+            rm -rf "$KERNEL_TMPDIR"
+            echo "✓ Kernel partition created with FIT image (direct method)"
+        else
+            echo "Error: genext2fs required for loop-device-free method"
+            rm -rf "$KERNEL_TMPDIR"
+            exit 1
+        fi
+    # Fallback: Use raw zImage and DTB
     else
-        echo "Error: genext2fs required for loop-device-free method"
-        rm -rf "$KERNEL_TMPDIR"
-        exit 1
+        echo "Using raw kernel files (zImage + DTB)..."
+        cp "${KERNEL_PACKAGE}/zImage" "$KERNEL_TMPDIR/"
+        cp "${KERNEL_PACKAGE}/rk3288-veyron-speedy.dtb" "$KERNEL_TMPDIR/" 2>/dev/null || true
+        
+        if command -v genext2fs &> /dev/null; then
+            genext2fs -b 65536 -d "$KERNEL_TMPDIR" -L "kernel" "$KERNEL_PART_IMG" 2>/dev/null
+            dd if="$KERNEL_PART_IMG" of="$IMAGE_FILE" bs=512 seek=2048 conv=notrunc 2>/dev/null
+            rm -f "$KERNEL_PART_IMG"
+            rm -rf "$KERNEL_TMPDIR"
+            echo "✓ Kernel partition created with raw files (direct method)"
+        else
+            echo "Error: genext2fs required for loop-device-free method"
+            rm -rf "$KERNEL_TMPDIR"
+            exit 1
+        fi
     fi
     
     # Create rootfs partition image
@@ -178,22 +206,45 @@ else
     sudo partprobe "$LOOP_DEV" 2>/dev/null || true
     sleep 1
 
-    # Format kernel partition (ext2, 64MB)
-    echo "Formatting kernel partition..."
-    sudo mkfs.ext2 -q -L "kernel" "${LOOP_DEV}p1" 2>/dev/null || {
-        echo "Warning: mkfs.ext2 failed, trying alternative method"
-        sudo mke2fs -t ext2 -q -L "kernel" "${LOOP_DEV}p1" 2>/dev/null
-    }
-
-    # Mount kernel partition and copy kernel files
-    KERNEL_MNT=$(mktemp -d)
-    sudo mount "${LOOP_DEV}p1" "$KERNEL_MNT"
-    sudo cp "${KERNEL_PACKAGE}/zImage" "$KERNEL_MNT/"
-    sudo cp "${KERNEL_PACKAGE}/rk3288-veyron-speedy.dtb" "$KERNEL_MNT/" 2>/dev/null || true
-    sudo sync
-    sudo umount "$KERNEL_MNT"
-    rmdir "$KERNEL_MNT"
-    echo "✓ Kernel partition created"
+    # Write kernel partition - prefer signed kernel, then FIT image, then raw files
+    echo "Writing kernel partition..."
+    
+    # Prefer signed kernel partition image (vmlinux.kpart)
+    if [ -f "${KERNEL_PACKAGE}/vmlinux.kpart" ]; then
+        echo "Using signed kernel partition image..."
+        sudo dd if="${KERNEL_PACKAGE}/vmlinux.kpart" of="${LOOP_DEV}p1" bs=4M conv=fsync 2>/dev/null
+        echo "✓ Signed kernel partition written"
+    # Fallback: Use FIT image if available (format as ext2)
+    elif [ -f "${KERNEL_PACKAGE}/gentoo.itb" ]; then
+        echo "Using FIT image for kernel partition..."
+        sudo mkfs.ext2 -q -L "kernel" "${LOOP_DEV}p1" 2>/dev/null || {
+            echo "Warning: mkfs.ext2 failed, trying alternative method"
+            sudo mke2fs -t ext2 -q -L "kernel" "${LOOP_DEV}p1" 2>/dev/null
+        }
+        KERNEL_MNT=$(mktemp -d)
+        sudo mount "${LOOP_DEV}p1" "$KERNEL_MNT"
+        sudo cp "${KERNEL_PACKAGE}/gentoo.itb" "$KERNEL_MNT/"
+        sudo cp "${KERNEL_PACKAGE}/kernel.flags" "$KERNEL_MNT/" 2>/dev/null || true
+        sudo sync
+        sudo umount "$KERNEL_MNT"
+        rmdir "$KERNEL_MNT"
+        echo "✓ Kernel partition created with FIT image"
+    # Fallback: Use raw zImage and DTB (format as ext2)
+    else
+        echo "Using raw kernel files (zImage + DTB)..."
+        sudo mkfs.ext2 -q -L "kernel" "${LOOP_DEV}p1" 2>/dev/null || {
+            echo "Warning: mkfs.ext2 failed, trying alternative method"
+            sudo mke2fs -t ext2 -q -L "kernel" "${LOOP_DEV}p1" 2>/dev/null
+        }
+        KERNEL_MNT=$(mktemp -d)
+        sudo mount "${LOOP_DEV}p1" "$KERNEL_MNT"
+        sudo cp "${KERNEL_PACKAGE}/zImage" "$KERNEL_MNT/"
+        sudo cp "${KERNEL_PACKAGE}/rk3288-veyron-speedy.dtb" "$KERNEL_MNT/" 2>/dev/null || true
+        sudo sync
+        sudo umount "$KERNEL_MNT"
+        rmdir "$KERNEL_MNT"
+        echo "✓ Kernel partition created with raw files"
+    fi
 
     # Format root filesystem partition (ext4)
     echo "Formatting root filesystem partition..."

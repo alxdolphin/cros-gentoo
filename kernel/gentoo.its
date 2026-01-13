@@ -1,0 +1,35 @@
+/dts-v1/;
+
+/ {
+	description = "Gentoo Linux kernel for C201";
+	#address-cells = <1>;
+
+	images {
+		kernel@1 {
+			description = "Gentoo Linux kernel";
+			data = /incbin/("zImage");
+			type = "kernel";
+			arch = "arm";
+			os = "linux";
+			compression = "none";
+			load = <0x02000000>;
+			entry = <0x02000000>;
+		};
+		fdt@1 {
+			description = "rk3288-veyron-speedy device tree";
+			data = /incbin/("rk3288-veyron-speedy.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+		};
+	};
+
+	configurations {
+		default = "conf@1";
+		conf@1 {
+			description = "Gentoo Linux";
+			kernel = "kernel@1";
+			fdt = "fdt@1";
+		};
+	};
+};

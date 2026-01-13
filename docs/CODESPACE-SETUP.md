@@ -14,7 +14,7 @@ The `.devcontainer/` directory contains:
 
 The container includes:
 
-- ARM cross-compilation toolchain (arm-linux-gnueabihf)
+- ARM cross-compilation toolchain (armv7a-unknown-linux-gnueabihf)
 - Kernel build dependencies (bc, bison, flex, libssl-dev, libelf-dev)
 - Device tree compiler
 - Build tools (make, gcc, git)
@@ -23,7 +23,7 @@ The container includes:
 
 Set automatically in container:
 - `ARCH=arm`
-- `CROSS_COMPILE=arm-linux-gnueabihf-`
+- `CROSS_COMPILE=armv7a-unknown-linux-gnueabihf-`
 
 ## First Run
 
@@ -31,7 +31,7 @@ After Codespace creation:
 
 1. Verify cross-compiler:
    ```bash
-   arm-linux-gnueabihf-gcc --version
+   armv7a-unknown-linux-gnueabihf-gcc --version
    ```
 
 2. Setup kernel source (git submodule):
@@ -60,8 +60,9 @@ To modify the container:
 
 Verify installation:
 ```bash
-which arm-linux-gnueabihf-gcc
-dpkg -l | grep arm-linux-gnueabihf
+which armv7a-unknown-linux-gnueabihf-gcc
+# For Ubuntu/Debian packages: dpkg -l | grep arm-linux-gnueabihf
+# For Gentoo toolchain: armv7a-unknown-linux-gnueabihf-gcc
 ```
 
 ### Kernel source submodule fails
