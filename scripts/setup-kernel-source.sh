@@ -34,13 +34,25 @@ fi
 
 # Initialize and update submodule
 echo "Initializing and updating git submodule..."
-git submodule update --init --recursive linux
-
-# Checkout specific version
-cd linux
-echo "Checking out ${KERNEL_VERSION}..."
-git checkout ${KERNEL_VERSION}
-cd ..
+if ! git submodule update --init --recursive linux 2>/dev/null; then
+    # Fallback: submodule not registered in git index, clone manually
+    echo "Submodule not in git index, cloning repository directly..."
+    KERNEL_URL=$(git config --file .gitmodules --get submodule.linux.url)
+    if [ -z "$KERNEL_URL" ]; then
+        KERNEL_URL="https://github.com/torvalds/linux.git"
+    fi
+    git clone --depth 1 --branch ${KERNEL_VERSION} "$KERNEL_URL" linux || \
+    git clone "$KERNEL_URL" linux
+    cd linux
+    git checkout ${KERNEL_VERSION}
+    cd ..
+else
+    # Checkout specific version
+    cd linux
+    echo "Checking out ${KERNEL_VERSION}..."
+    git checkout ${KERNEL_VERSION}
+    cd ..
+fi
 
 echo "✓ Kernel source ready at linux/"
 
