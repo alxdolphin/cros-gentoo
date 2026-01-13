@@ -33,8 +33,7 @@ if [ -d "linux" ] && [ -f "linux/Makefile" ]; then
 fi
 
 # Initialize and update submodule
-echo "Initializing git submodule..."
-git submodule init linux
+echo "Initializing and updating git submodule..."
 git submodule update --init --recursive linux
 
 # Checkout specific version
