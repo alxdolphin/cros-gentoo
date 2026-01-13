@@ -18,6 +18,9 @@ KERNEL_PART_SIZE=64M      # Partition 1: Kernel partition
 ROOTFS_PART_SIZE=4G       # Partition 2: Root filesystem
 IMAGE_SIZE=4096M          # Total image size (4GB)
 
+# ChromeOS kernel partition type GUID
+CHROMEOS_KERNEL_TYPE="FE3A2A5D-4F32-41A7-B725-ACCC3285A309"
+
 # Root PARTUUID - read from kernel.flags if available, otherwise use default
 KERNEL_FLAGS="${PROJECT_ROOT}/kernel/kernel.flags"
 if [ -f "$KERNEL_FLAGS" ] && grep -q "root=PARTUUID=" "$KERNEL_FLAGS"; then
@@ -69,26 +72,50 @@ echo "Creating system image: $(basename "$IMAGE_FILE")"
 rm -f "$IMAGE_FILE"
 dd if=/dev/zero of="$IMAGE_FILE" bs=1M count=4096 2>/dev/null
 
-# Create partition table (GPT) - use direct method since loop devices may not work
+# Create partition table (GPT) with ChromeOS-compatible partitions
 echo "Creating partition table..."
 if [ -n "$GDISK_CMD" ]; then
-    # Use gdisk/sgdisk (non-interactive)
-    echo -e "o\ny\nn\n1\n2048\n+64M\nef00\nKERN-A\nn\n2\n133120\n\n8300\nROOT-A\nx\nc\n2\n${ROOT_PARTUUID}\nw\ny" | $GDISK_CMD "$IMAGE_FILE" >/dev/null 2>&1
+    # Use sgdisk for ChromeOS partitions (non-interactive)
+    # Create GPT table
+    sgdisk --clear "$IMAGE_FILE" >/dev/null 2>&1
+    
+    # Partition 1: ChromeOS kernel partition (64MB)
+    # Type: FE3A2A5D-4F32-41A7-B725-ACCC3285A309 (ChromeOS kernel)
+    sgdisk --new=1:2048:+64M --change-name=1:"kernel" --typecode=1:${CHROMEOS_KERNEL_TYPE} "$IMAGE_FILE" >/dev/null 2>&1
+    
+    # Partition 2: Root filesystem (~4GB)
+    # Type: 0FC63DAF-8483-4772-8E79-3D69D8477DE4 (Linux filesystem)
+    sgdisk --new=2:133120 --change-name=2:"root" --typecode=2:8300 "$IMAGE_FILE" >/dev/null 2>&1
+    
+    # Set root partition UUID if specified
+    if [ -n "$ROOT_PARTUUID" ]; then
+        sgdisk --partition-guid=2:${ROOT_PARTUUID} "$IMAGE_FILE" >/dev/null 2>&1
+    fi
+    
+    # Set ChromeOS kernel attributes using cgpt if available
+    if command -v cgpt &> /dev/null; then
+        cgpt add -i 1 -P 10 -T 5 -S 1 "$IMAGE_FILE" 2>/dev/null || true
+    else
+        # Fallback: Set legacy_boot flag (basic ChromeOS compatibility)
+        sgdisk --attributes=1:set:48 "$IMAGE_FILE" >/dev/null 2>&1
+    fi
+    
+    # Repair GPT backup header (needed after direct file manipulation)
+    sgdisk --verify "$IMAGE_FILE" >/dev/null 2>&1 || true
+    
+    echo "✓ Partition table created with ChromeOS-compatible partitions"
 else
-    # Use parted with udevadm disabled
+    # Fallback: Use parted (less precise for ChromeOS)
     PARTED_SECTOR_SIZE=512
     $PARTED_CMD -s "$IMAGE_FILE" mklabel gpt 2>/dev/null
-    $PARTED_CMD -s "$IMAGE_FILE" unit s mkpart "KERN-A" 2048 133119 2>/dev/null
-    $PARTED_CMD -s "$IMAGE_FILE" unit s mkpart "ROOT-A" 133120 100% 2>/dev/null
+    $PARTED_CMD -s "$IMAGE_FILE" unit s mkpart "kernel" 2048 133119 2>/dev/null
+    $PARTED_CMD -s "$IMAGE_FILE" unit s mkpart "root" 133120 100% 2>/dev/null
     $PARTED_CMD -s "$IMAGE_FILE" set 1 legacy_boot on 2>/dev/null
     
-    # Set PARTUUID using sgdisk if available (parted doesn't support setting PARTUUID directly)
-    if command -v sgdisk &> /dev/null; then
-        echo "Setting PARTUUID using sgdisk..."
+    # Set root PARTUUID using sgdisk if available
+    if command -v sgdisk &> /dev/null && [ -n "$ROOT_PARTUUID" ]; then
+        echo "Setting root PARTUUID using sgdisk..."
         sgdisk --partition-guid=2:${ROOT_PARTUUID} "$IMAGE_FILE" 2>/dev/null || true
-    else
-        echo "Warning: sgdisk not available, PARTUUID will be auto-generated"
-        echo "Note: You may need to update kernel.flags with the actual PARTUUID"
     fi
 fi
 
@@ -113,7 +140,7 @@ if [ "$USE_LOOP" = "false" ] || [ -z "$LOOP_DEV" ]; then
     cp "${KERNEL_PACKAGE}/rk3288-veyron-speedy.dtb" "$KERNEL_TMPDIR/" 2>/dev/null || true
     
     if command -v genext2fs &> /dev/null; then
-        genext2fs -b 65536 -d "$KERNEL_TMPDIR" -L "KERN-A" "$KERNEL_PART_IMG" 2>/dev/null
+        genext2fs -b 65536 -d "$KERNEL_TMPDIR" -L "kernel" "$KERNEL_PART_IMG" 2>/dev/null
         # Write kernel partition to offset (2048 sectors * 512 = 1048576 bytes)
         dd if="$KERNEL_PART_IMG" of="$IMAGE_FILE" bs=512 seek=2048 conv=notrunc 2>/dev/null
         rm -f "$KERNEL_PART_IMG"
@@ -137,7 +164,7 @@ if [ "$USE_LOOP" = "false" ] || [ -z "$LOOP_DEV" ]; then
     fi
     
     # Create ext4 filesystem image (using genext2fs which supports ext4)
-    genext2fs -b 4194304 -d "$ROOTFS_TMPDIR" -L "ROOT-A" "$ROOTFS_PART_IMG" 2>/dev/null
+    genext2fs -b 4194304 -d "$ROOTFS_TMPDIR" -L "root" "$ROOTFS_PART_IMG" 2>/dev/null
     # Write rootfs partition to offset (133120 sectors * 512 = 68157440 bytes)
     dd if="$ROOTFS_PART_IMG" of="$IMAGE_FILE" bs=512 seek=133120 conv=notrunc 2>/dev/null
     rm -f "$ROOTFS_PART_IMG"
@@ -153,9 +180,9 @@ else
 
     # Format kernel partition (ext2, 64MB)
     echo "Formatting kernel partition..."
-    sudo mkfs.ext2 -q -L "KERN-A" "${LOOP_DEV}p1" 2>/dev/null || {
+    sudo mkfs.ext2 -q -L "kernel" "${LOOP_DEV}p1" 2>/dev/null || {
         echo "Warning: mkfs.ext2 failed, trying alternative method"
-        sudo mke2fs -t ext2 -q -L "KERN-A" "${LOOP_DEV}p1" 2>/dev/null
+        sudo mke2fs -t ext2 -q -L "kernel" "${LOOP_DEV}p1" 2>/dev/null
     }
 
     # Mount kernel partition and copy kernel files
@@ -170,9 +197,9 @@ else
 
     # Format root filesystem partition (ext4)
     echo "Formatting root filesystem partition..."
-    sudo mkfs.ext4 -q -L "ROOT-A" -F "${LOOP_DEV}p2" 2>/dev/null || {
+    sudo mkfs.ext4 -q -L "root" -F "${LOOP_DEV}p2" 2>/dev/null || {
         echo "Warning: mkfs.ext4 failed, trying alternative method"
-        sudo mke2fs -t ext4 -q -L "ROOT-A" -F "${LOOP_DEV}p2" 2>/dev/null
+        sudo mke2fs -t ext4 -q -L "root" -F "${LOOP_DEV}p2" 2>/dev/null
     }
 
     # Mount root partition

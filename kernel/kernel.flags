@@ -1,1 +1,1 @@
-console=tty1 root=PARTUUID=ae51ec9b-87d2-4e84-af47-79b15348d8bf rootfstype=ext4 rootwait rw
+console=tty1 root=PARTUUID=7999e767-a69e-49bf-8c9c-6e2b0b6f4e93 rootfstype=ext4 rootwait rw

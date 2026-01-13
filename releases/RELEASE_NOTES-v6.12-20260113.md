@@ -2,7 +2,7 @@
 
 ## C201 Kernel for Gentoo Linux
 
-**Release Date**: Tue, 13 Jan 2026 09:20:41 +0000  
+**Release Date**: Tue, 13 Jan 2026 10:06:42 +0000  
 **Kernel Version**: 6.12  
 **Target Device**: ASUS Chromebook C201 (rk3288 veyron-speedy)
 
@@ -43,7 +43,7 @@ Should display: `6.12`
 
 - **Cross Compiler**: arm-linux-gnueabihf-gcc
 - **Build Host**: codespaces-3081e1
-- **Build Date**: Tue, 13 Jan 2026 09:20:41 +0000
+- **Build Date**: Tue, 13 Jan 2026 10:06:42 +0000
 
 ## Source Code
 

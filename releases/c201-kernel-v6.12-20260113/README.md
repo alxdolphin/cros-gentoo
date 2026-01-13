@@ -5,7 +5,7 @@ Kernel image for ASUS Chromebook C201 (rk3288 veyron-speedy) running Gentoo Linu
 ## Kernel Information
 
 - **Kernel Version**: 6.12
-- **Build Date**: Tue, 13 Jan 2026 09:20:11 +0000
+- **Build Date**: Tue, 13 Jan 2026 10:06:14 +0000
 - **Target Device**: ASUS Chromebook C201 (rk3288 veyron-speedy)
 - **Architecture**: ARM (armv7-a)
 
@@ -70,7 +70,7 @@ SHA256 checksums for verification:
 f63893a4a84c57f04fb1df250e8e9105c8d2a041005685e3c669d22432542e70  zImage
 730640396d9678802bd707a9f0fbbd3c90d6109a0e4c8c473a4af9e0b25c0ee8  rk3288-veyron-speedy.dtb
 2d8b68ec7fb3ab7b237d6bf291c76b786ae27a4c0a265202e319ccb805f0eaa0  kernel.config
-da65792808dde8d7c589ead00380e41a25deb642e4bd90654f01f65749ebf972  c201-system-v6.12-20260113.img
+4b839d3b9d66d807b746e13f62d493b1e68080bd3e18defe70edcbd63d12be6e  c201-system-v6.12-20260113.img
 ```
 
 ## Support
